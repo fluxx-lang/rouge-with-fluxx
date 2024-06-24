@@ -1,0 +1,11 @@
+<element 
+    property1=42
+    property2=43
+/element>
+
+<element property1=42; property2=43     />
+
+<element
+    property1=<child childprop=42 />
+    property2=<child childprop=45 />
+    />

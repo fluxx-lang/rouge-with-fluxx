@@ -10,7 +10,7 @@ module Rouge
       filenames '*.fluxx', '*.fx'
 
       keywords = %w(
-        if let with for properties
+        if /if else let /let with /let for /for unset properties
       )
 
       keywords_type = %w(
@@ -23,45 +23,61 @@ module Rouge
       def self.detect?(text)
         return true if text =~ /\A<\?fluxx\b/
       end
+
+      identifier = /@?[_a-z]\w*/i
+      openTag = %r(<[\p{L}:_][\p{Word}\p{Cf}:.·-]*|<\n)
+      closeTag = %r(\/[\p{L}:_][\p{Word}\p{Cf}:.·-]*>|/>)
       
       state :root do
-        rule %r/[^<&]+/, Text
-        rule %r/&\S*?;/, Name::Entity
-        rule %r/<!--/, Comment, :comment
+        mixin :whitespace
 
-        # open tags
-        rule %r(<[\p{L}:_][\p{Word}\p{Cf}:.·-]*), Name::Tag, :tag
-
-        rule %r/\b(#{keywords.join('|')})\b/, Keyword
+        rule %r/(#{keywords.join('|')})/, Keyword
         rule %r/\b(#{keywords_type.join('|')})\b/, Keyword::Type
+
+        rule identifier, Name
+
+        rule %r/=>/, Punctuation
+        rule %r/=/, Punctuation
+        rule %r/;/, Punctuation
+        rule %r/,/, Punctuation
+        rule %r/\./, Punctuation
+
+        rule %r(
+          [0-9](?:[_0-9]*[0-9])?
+          ([.][0-9](?:[_0-9]*[0-9])?)? # decimal
+          (e[+-]?[0-9](?:[_0-9]*[0-9])?)? # exponent
+          [fldum]? # type
+        )ix, Num
+
+        rule %r/#[0-9a-f]{1,6}/i, Num # colors
+
+        rule %r/[\p{L}:_][\p{Word}\p{Cf}:.·-]*=/, Name::Attribute, :propertyValue    # property=
+
+        rule openTag, Name::Tag
+        rule closeTag, Name::Tag
       end
 
-      state :comment do
-        rule %r/[^-]+/m, Comment
-        rule %r/-->/, Comment, :pop!
-        rule %r/-/, Comment
-      end
-
-      state :tag do
+      state :whitespace do
         rule %r/\s+/m, Text
-        rule %r/[\p{L}:_][\p{Word}\p{Cf}:.·-]*\s*=/m, Name::Attribute, :propertyValue
+        rule %r(//.*?$), Comment::Single
 
-        # close tags
-        rule(/\/[\p{L}:_][\p{Word}\p{Cf}:.·-]*>/) { token Name::Tag; pop! 1 }
-        rule(/\/>/) { token Name::Tag; pop! 1 }
+        rule %r/<!--/, Comment::Multiline, :xmlStyleComment
+      end
+
+      state :xmlStyleComment do
+        rule %r/[^-]+/m, Comment::Multiline
+        rule %r/-->/, Comment::Multiline, :pop!
+        rule %r/-/, Comment::Multiline
       end
 
       state :propertyValue do
-        rule %r/[^;^\n^\/^<]+/, Text
+        rule %r/[^;^\n^\/^<]+/, Str
         rule %r/;/, Punctuation, :pop!
-        rule %r/\n/, Text::Whitespace, :pop!
+        rule %r/\n/, Text, :pop!
 
-        # open tags
-        rule %r(<[\p{L}:_][\p{Word}\p{Cf}:.·-]*), Name::Tag, :tag
+        rule openTag, Name::Tag
 
-        # close tags
-        rule(/\/[\p{L}:_][\p{Word}\p{Cf}:.·-]*>/) { token Name::Tag; pop! 2 }
-        rule(/\/>/) { token Name::Tag; pop! 2 }
+        rule closeTag, Name::Tag, :pop!
       end
     end
   end

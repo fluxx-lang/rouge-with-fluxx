@@ -24,7 +24,7 @@ module Rouge
         return true if text =~ /\A<\?fluxx\b/
       end
 
-      identifier = /@?[_a-z]\w*/i
+      identifier = /[_a-zA-Z][_a-zA-Z0-9]*/
       openTag = %r(<[\p{L}:_][\p{Word}\p{Cf}:.·-]*|<\n)
       closeTag = %r(\/[\p{L}:_][\p{Word}\p{Cf}:.·-]*>|/>)
       
@@ -33,6 +33,9 @@ module Rouge
 
         rule %r/(#{keywords.join('|')})/, Keyword
         rule %r/\b(#{keywords_type.join('|')})\b/, Keyword::Type
+
+        # TODO: Treat property values specially
+        # rule %r/[_a-zA-Z][_a-zA-Z0-9]*=/, Name::Attribute, :propertyValue    # property=
 
         rule identifier, Name
 
@@ -50,8 +53,6 @@ module Rouge
         )ix, Num
 
         rule %r/#[0-9a-f]{1,6}/i, Num # colors
-
-        rule %r/[\p{L}:_][\p{Word}\p{Cf}:.·-]*=/, Name::Attribute, :propertyValue    # property=
 
         rule openTag, Name::Tag
         rule closeTag, Name::Tag
@@ -71,12 +72,17 @@ module Rouge
       end
 
       state :propertyValue do
+        mixin :whitespace
+
+        rule %r/[_a-zA-Z][_a-zA-Z0-9]*=/, Name::Attribute, :propertyValue    # property=
+
         rule %r/[^;^\n^\/^<]+/, Str
         rule %r/;/, Punctuation, :pop!
         rule %r/\n/, Text, :pop!
 
-        rule openTag, Name::Tag
+        rule %r/(#{keywords.join('|')})/, Keyword
 
+        rule openTag, Name::Tag
         rule closeTag, Name::Tag, :pop!
       end
     end

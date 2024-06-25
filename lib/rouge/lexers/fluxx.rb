@@ -34,8 +34,8 @@ module Rouge
         rule %r/(#{keywords.join('|')})/, Keyword
         rule %r/\b(#{keywords_type.join('|')})\b/, Keyword::Type
 
-        # TODO: Treat property values specially
-        # rule %r/[_a-zA-Z][_a-zA-Z0-9]*=/, Name::Attribute, :propertyValue    # property=
+        # TODO: Treat property values specially, using :propertyValue state
+        rule %r/[_a-zA-Z][_a-zA-Z0-9]*=/, Name::Attribute
 
         rule identifier, Name
 

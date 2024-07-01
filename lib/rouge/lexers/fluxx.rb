@@ -39,11 +39,7 @@ module Rouge
 
         rule identifier, Name
 
-        rule %r/=>/, Punctuation
-        rule %r/=/, Punctuation
-        rule %r/;/, Punctuation
-        rule %r/,/, Punctuation
-        rule %r/\./, Punctuation
+        rule %r/[!()+\-*\/=|\[\];.,<>@]/, Punctuation
 
         rule %r(
           [0-9](?:[_0-9]*[0-9])?

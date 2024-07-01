@@ -39,8 +39,6 @@ module Rouge
 
         rule identifier, Name
 
-        rule %r/[!()+\-*\/=|\[\];.,<>@]/, Punctuation
-
         rule %r(
           [0-9](?:[_0-9]*[0-9])?
           ([.][0-9](?:[_0-9]*[0-9])?)? # decimal
@@ -52,6 +50,8 @@ module Rouge
 
         rule openTag, Name::Tag
         rule closeTag, Name::Tag
+
+        rule %r/[!()+\-*\/=|\[\];.,<>@]/, Punctuation
       end
 
       state :whitespace do
